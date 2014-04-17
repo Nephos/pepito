@@ -189,6 +189,7 @@ Disassembly of section .text:
  626:	89 04 24             	mov    %eax,(%esp)
  629:	e8 2e fe ff ff       	call   45c <sendLogMessage@plt>
  62e:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+	;; jump vers la récupération de ... message ?
  633:	e9 e5 00 00 00       	jmp    71d <handlerMakeSecretRecipes+0x1ad>
  638:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
  63c:	8b 83 f4 ff ff ff    	mov    -0xc(%ebx),%eax
@@ -198,6 +199,7 @@ Disassembly of section .text:
  64a:	75 92                	jne    5de <handlerMakeSecretRecipes+0x6e>
  64c:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
  653:	eb 30                	jmp    685 <handlerMakeSecretRecipes+0x115>
+	;; jump ici pour déchiffrement
  655:	8b 45 f4             	mov    -0xc(%ebp),%eax
  658:	89 c2                	mov    %eax,%edx
  65a:	03 55 ec             	add    -0x14(%ebp),%edx
@@ -211,21 +213,29 @@ Disassembly of section .text:
  672:	83 c8 fe             	or     $0xfffffffe,%eax
  675:	83 c0 01             	add    $0x1,%eax
  678:	0f b6 44 05 e9       	movzbl -0x17(%ebp,%eax,1),%eax
+	;; on a la clé dans %cl et le message chiffré dans %al
+	;; on déchiffre par un xor et on place le resultat dans %al
  67d:	30 c8                	xor    %cl,%al
+	;; on save le message déchiffré dans %edx
  67f:	88 02                	mov    %al,(%edx)
+	;; on passe au suivant
  681:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
  685:	8b 45 f4             	mov    -0xc(%ebp),%eax
  688:	03 45 ec             	add    -0x14(%ebp),%eax
  68b:	0f b6 00             	movzbl (%eax),%eax
+	;; test si %al est != \0
  68e:	84 c0                	test   %al,%al
+	;; jump si != 0 en arriere
  690:	75 c3                	jne    655 <handlerMakeSecretRecipes+0xe5>
+
  692:	8d 83 a8 ee ff ff    	lea    -0x1158(%ebx),%eax
  698:	89 44 24 04          	mov    %eax,0x4(%esp)
  69c:	8b 45 ec             	mov    -0x14(%ebp),%eax
  69f:	89 04 24             	mov    %eax,(%esp)
  6a2:	e8 c5 fd ff ff       	call   46c <strcmp@plt>
  6a7:	85 c0                	test   %eax,%eax
-	;; TEST DU MPD ?
+	;; TEST DU MPD ? ou de l'ingrédient secret
+
  6a9:	75 5f                	jne    70a <handlerMakeSecretRecipes+0x19a>
  6ab:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
  6b2:	eb 21                	jmp    6d5 <handlerMakeSecretRecipes+0x165>
@@ -237,6 +247,7 @@ Disassembly of section .text:
  6ca:	8b 55 f4             	mov    -0xc(%ebp),%edx
  6cd:	89 4c d0 04          	mov    %ecx,0x4(%eax,%edx,8)
  6d1:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
+
 	;;  LE TEST DU MDP MENE ICI ??
  6d5:	8b 83 f4 ff ff ff    	mov    -0xc(%ebx),%eax
  6db:	8b 55 f4             	mov    -0xc(%ebp),%edx
@@ -257,8 +268,12 @@ Disassembly of section .text:
  710:	89 04 24             	mov    %eax,(%esp)
  713:	e8 44 fd ff ff       	call   45c <sendLogMessage@plt>
  718:	b8 00 00 00 00       	mov    $0x0,%eax
+
+	;; il se passe un truc ici (récupération de l'adresse de l'ingrédient chiffré ?)
  71d:	81 c4 24 01 00 00    	add    $0x124,%esp
+	;; ca met le rsultat dans EAX ; taille de la pile? + 0x124 (292) => EAX
  723:	5b                   	pop    %ebx
+	;; que contient la stack ?
  724:	5d                   	pop    %ebp
  725:	c3                   	ret    
  726:	90                   	nop
@@ -271,4 +286,4 @@ Disassembly of section .fini:
  731:	89 e5                	mov    %esp,%ebp
  733:	e8 58 fd ff ff       	call   490 <__deregister_frame_info@plt+0x14>
  738:	c9                   	leave  
- 739:	c3                   	ret    
+ 739:	c3                   	ret

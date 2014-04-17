@@ -1,7 +1,7 @@
 NAME		=	pepito
 CC		=	gcc
 
-CFLAGS		+=	
+CFLAGS		+=	-ggdb
 LDFLAGS		= 	-L./lib_linux -lsecret -Wl,-rpath,./lib_linux
 
 SRCS		=	main.c daemon.c network.c utils.c
