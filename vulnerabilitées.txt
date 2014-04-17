@@ -1,20 +1,22 @@
 FICHIER	    VULNERABILITE							PATCH						 EXPLOIT
 	    #ID		DESCRIPTION					 	DESCRIPTION					 DESCRIPTION
-------------|-------------------------------------------------------------------|-----------------------------------------------|-------------------------------------
-daemon.c    |#1		kill: il est possible de changer le pid dans		|
-	    |		le fichier qui n'est pas protégé en écriture		|Chmod 600
-	    |   	       	     	 	    		       	       	|
-main.c	    |#2		Ligne 63, password peut avoir une taille > 64 donc      |
-	    |		dépasser après savePassword lors du strcpy		|utiliser un strncpy limité à 64o
-	    |	       		    	    		       			|
-	    |#3		Ligne 350, getNumber peut retourner une valeur négative	|
-	    |		qui chargera des données avant le tableau (id < 0)	|arrêter si getNumber retourne une erreur
-	    |    	     	 	       	  	      	      		|
-	    |#4		Ligne 317, appelle system (system() ) (via modification	|
-	    |		du path il y a moyen d'exploiter la vulnérabilité via	|
-	    |		l'environ)     	     		    		  	|
-	    |									|
-	    |#5		Ligne 87 : même chose que #2				|
-	    |      	   	        	  				|
-	    |#6		Ligne 101 : même chose que #2				|
-
+------------|-----------|-------------------------------------------------------|-----------------------------------------------|-------------------------------------
+daemon.c    |#1		|kill: il est possible de changer le pid dans		|
+	    |		|le fichier qui n'est pas protégé en écriture		|Chmod 600
+	    |   	|       	     	 	    		       	|
+main.c	    |#2		|Ligne 63, password peut avoir une taille > 64 donc     |
+	    |		|dépasser après savePassword lors du strcpy		|utiliser un strncpy limité à 64o
+	    |	       	|	    	    		       			|
+	    |#3		|Ligne 350, getNumber peut retourner une valeur négative|
+	    |		|qui chargera des données avant le tableau (id < 0)	|arrêter si getNumber retourne une erreur
+	    |    	|     	 	       	  	      	      		|
+	    |#4		|Ligne 317, appelle system (system() ) (via modification|
+	    |		|du path il y a moyen d'exploiter la vulnérabilité via	|
+	    |		|l'environ)     	     		    		|
+	    |		|							|
+	    |#5		|Ligne 87 : même chose que #2				|
+	    |      	|   	        	  				|
+	    |#6		|Ligne 101 : même chose que #2				|
+	    |		|							|
+network.c   |#7		|Ligne 74: fprintf msg peut être formaté avec des flags	|Utiliser fprintf(err, "%s", msg);
+	    |		|(comme %s).						|
