@@ -28,6 +28,9 @@ main.c	    |#2		|Ligne 63, password peut avoir une taille > 64 donc     |
 	    |		|							|
 	    |#10	|Ligne 278 : money n'est pas bornée (Int overflow)	|if money > 2147483630, ne pas ajouter 10$
 	    |		|							|
+	    |#11	|Ligne 315 : log est un char[128]. Sprintf peut imprimer|
+	    |		|plus de 127 chars (buffer overflow)			|
+	    |		|							|
 network.c   |#8		|Ligne 74: fprintf msg peut être formaté avec des flags	|Utiliser fprintf(err, "%s", msg);
 	    |		|(comme %s).						|
 
