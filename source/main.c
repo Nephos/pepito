@@ -68,7 +68,8 @@ checkPassword(char *password)
     isAdmin = 1;
 
   if (!(isAdmin | isUser)) {
-    logMessage = malloc(sizeof(*logMessage) * (strlen(password) + 21));
+    if ((logMessage = malloc(sizeof(*logMessage) * (strlen(password) + 21))) == NULL)
+      return NOBODY;
     memset(logMessage, 0, strlen(password) + 21);
     strcat(logMessage, "Invalid password : ");
     strcat(logMessage, savePassword);
