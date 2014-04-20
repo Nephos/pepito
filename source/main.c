@@ -14,6 +14,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "pepito.h"
 #include "network.h"
 #include "daemon.h"
@@ -60,7 +64,7 @@ checkPassword(char *password)
 
   if (strlen(password) < 512 && !strncmp(password, userPassword, 512))
     isUser = 1;
-  strlcpy(savePassword, password, 512);
+  strncpy(savePassword, password, 512);
 
   for (i = 0; password[i]; ++i)
     password[i] ^= xorKey;
@@ -86,7 +90,7 @@ static void
 changeUserPassword(char *password)
 {
   if (password) {
-    strlcpy(userPassword, password, 512);
+    strncpy(userPassword, password, 512);
     sendLogMessage(PASSWD_CHANGE);
   }
 }
@@ -99,7 +103,7 @@ changeAdminPassword(char *password)
   if (password) {
     for (i = 0; password[i]; ++i)
       password[i] ^= xorKey;
-    strlcpy(adminPassword, password, 512);
+    strncpy(adminPassword, password, 512);
     sendLogMessage(PASSWD_CHANGE);
   }
 }
@@ -299,7 +303,7 @@ handlerBuyIngredient(void *packetPtr, size_t packetSize)
 {
   int			i;
   char			*ingredientName;
-  int			amount;
+  unsigned int		amount;
   char			*password = NULL;
   int			fd;
 
@@ -318,7 +322,7 @@ handlerBuyIngredient(void *packetPtr, size_t packetSize)
 	money -= 2 * amount;
 	stock[i].quantity += amount;
 	sendLogMessage(INGREDIENT_BOUGHT);
-	fd = open("log", O_CREAT | O_WRONLY | O_APPREND, S_IRWXU);
+	fd = open("log", O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
 	write(fd, ingredientName, strlen(ingredientName));
 	write(fd, " was bought\n", 12);
 	close(fd);

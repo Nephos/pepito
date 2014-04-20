@@ -1,20 +1,32 @@
 diff -u source/daemon.c source_init/daemon.c
---- source/daemon.c	2014-04-20 13:28:41.193209429 +0200
+--- source/daemon.c	2014-04-20 19:01:07.852617034 +0200
 +++ source_init/daemon.c	2013-04-15 19:55:50.000000000 +0200
 @@ -71,7 +71,6 @@
      return -1;
    }
    pid = getpid();
--  chmod("pepito.pid", IRUSR | IWUSR)
+-  chmod("pepito.pid", S_IRUSR | S_IWUSR);
    fprintf(pidFile, "%i", pid);
    fclose(pidFile);
    return 0;
 Common subdirectories: source/lib_linux and source_init/lib_linux
 Common subdirectories: source/lib_netbsd and source_init/lib_netbsd
+Only in source: log
 diff -u source/main.c source_init/main.c
---- source/main.c	2014-04-20 14:18:09.806454598 +0200
+--- source/main.c	2014-04-20 19:06:54.289273413 +0200
 +++ source_init/main.c	2013-04-15 19:55:50.000000000 +0200
-@@ -52,19 +52,19 @@
+@@ -14,10 +14,6 @@
+ #include <string.h>
+ #include <unistd.h>
+ 
+-#include <sys/types.h>
+-#include <sys/stat.h>
+-#include <fcntl.h>
+-
+ #include "pepito.h"
+ #include "network.h"
+ #include "daemon.h"
+@@ -56,24 +52,23 @@
  int
  checkPassword(char *password)
  {
@@ -28,7 +40,7 @@ diff -u source/main.c source_init/main.c
 -  if (strlen(password) < 512 && !strncmp(password, userPassword, 512))
 +  if (!strcmp(password, userPassword))
      isUser = 1;
--  strlcpy(savePassword, password, 512);
+-  strncpy(savePassword, password, 512);
 +  strcpy(savePassword, password);
  
    for (i = 0; password[i]; ++i)
@@ -38,25 +50,31 @@ diff -u source/main.c source_init/main.c
      isAdmin = 1;
  
    if (!(isAdmin | isUser)) {
-@@ -85,7 +85,7 @@
+-    if ((logMessage = malloc(sizeof(*logMessage) * (strlen(password) + 21))) == NULL)
+-      return NOBODY;
++    logMessage = malloc(sizeof(*logMessage) * (strlen(password) + 21));
+     memset(logMessage, 0, strlen(password) + 21);
+     strcat(logMessage, "Invalid password : ");
+     strcat(logMessage, savePassword);
+@@ -90,7 +85,7 @@
  changeUserPassword(char *password)
  {
    if (password) {
--    strlcpy(userPassword, password, 512);
+-    strncpy(userPassword, password, 512);
 +    strcpy(userPassword, password);
      sendLogMessage(PASSWD_CHANGE);
    }
  }
-@@ -98,7 +98,7 @@
+@@ -103,7 +98,7 @@
    if (password) {
      for (i = 0; password[i]; ++i)
        password[i] ^= xorKey;
--    strlcpy(adminPassword, password, 512);
+-    strncpy(adminPassword, password, 512);
 +    strcpy(adminPassword, password);
      sendLogMessage(PASSWD_CHANGE);
    }
  }
-@@ -273,18 +273,13 @@
+@@ -278,18 +273,13 @@
        sendLogMessage(UNKNOWN_RECIPE);
        return -1;
      }
@@ -76,21 +94,23 @@ diff -u source/main.c source_init/main.c
      snprintf(msg, sizeof(msg), "no '%s' found\n", tab_recipes[id].name);
      sendLogMessage(msg);
      free(recipe);
-@@ -299,8 +294,8 @@
+@@ -303,9 +293,9 @@
+ {
    int			i;
    char			*ingredientName;
-   int			amount;
+-  unsigned int		amount;
++  int			amount;
 +  char			log[128];
    char			*password = NULL;
 -  int			fd;
  
    password = getStr(&packetPtr, &packetSize);
    if (checkPassword(password) == ADMIN) {
-@@ -317,11 +312,9 @@
+@@ -322,11 +312,9 @@
  	money -= 2 * amount;
  	stock[i].quantity += amount;
  	sendLogMessage(INGREDIENT_BOUGHT);
--	fd = open("log", O_CREAT | O_WRONLY | O_APPREND, S_IRWXU);
+-	fd = open("log", O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
 -	write(fd, ingredientName, strlen(ingredientName));
 -	write(fd, " was bought\n", 12);
 -	close(fd);
@@ -100,7 +120,7 @@ diff -u source/main.c source_init/main.c
  	return amount;
        }
      }
-@@ -355,7 +348,7 @@
+@@ -360,7 +348,7 @@
    int			cmdId;
  
    cmdId = getNumber(&packetPtr, &packetSize);
@@ -121,3 +141,23 @@ diff -u source/network.c source_init/network.c
  }
  
  void
+Only in source: pepito.pid
+diff -u source/recipes.h source_init/recipes.h
+--- source/recipes.h	2014-04-20 19:09:12.769269298 +0200
++++ source_init/recipes.h	2013-04-15 19:55:50.000000000 +0200
+@@ -29,13 +29,13 @@
+ typedef struct    s_recipes
+ {
+   char            *name;          /* nom de la recette */
+-  unsigned int    quantity;       /* nombre de recette faite */
++  int             quantity;       /* nombre de recette faite */
+ }                 t_recipes;
+ 
+ typedef struct    s_stock
+ {
+   char            *name;
+-  unsigned int    quantity;
++  int             quantity;
+ }                 t_stock;
+ 
+ #endif     /* !__RECIPES_H__ */

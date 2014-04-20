@@ -29,13 +29,13 @@
 typedef struct    s_recipes
 {
   char            *name;          /* nom de la recette */
-  int             quantity;       /* nombre de recette faite */
+  unsigned int    quantity;       /* nombre de recette faite */
 }                 t_recipes;
 
 typedef struct    s_stock
 {
   char            *name;
-  int             quantity;
+  unsigned int    quantity;
 }                 t_stock;
 
 #endif     /* !__RECIPES_H__ */
