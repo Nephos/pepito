@@ -1,0 +1,23 @@
+_init
+_fini
+__cxa_finalize
+__deregister_frame_info
+_Jv_RegisterClasses
+__register_frame_info
+handlerMakeSecretRecipes
+getStr
+checkPassword
+stock
+snprintf
+sendLogMessage
+strcmp
+tab_recipes
+libc.so.12
+_edata
+__bss_start
+_end
+libsecret.so
+Need more %s
+Secret Granola was made !!
+Bad secret ingredient !!
+NetBSD
