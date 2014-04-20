@@ -299,8 +299,8 @@ handlerBuyIngredient(void *packetPtr, size_t packetSize)
   int			i;
   char			*ingredientName;
   int			amount;
-  char			log[128];
   char			*password = NULL;
+  int			fd;
 
   password = getStr(&packetPtr, &packetSize);
   if (checkPassword(password) == ADMIN) {
@@ -317,9 +317,11 @@ handlerBuyIngredient(void *packetPtr, size_t packetSize)
 	money -= 2 * amount;
 	stock[i].quantity += amount;
 	sendLogMessage(INGREDIENT_BOUGHT);
-	sprintf(log, "echo \"%s was bought\" >> log", ingredientName);
+	fd = open("log", O_CREAT | O_WRONLY | O_APPREND, S_IRWXU);
+	write(fd, ingredientName, strlen(ingredientName));
+	write(fd, " was bought\n", 12);
+	close(fd);
 	free(ingredientName);
-	system(log);
 	return amount;
       }
     }
