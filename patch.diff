@@ -1,0 +1,123 @@
+diff -u source/daemon.c source_init/daemon.c
+--- source/daemon.c	2014-04-20 13:28:41.193209429 +0200
++++ source_init/daemon.c	2013-04-15 19:55:50.000000000 +0200
+@@ -71,7 +71,6 @@
+     return -1;
+   }
+   pid = getpid();
+-  chmod("pepito.pid", IRUSR | IWUSR)
+   fprintf(pidFile, "%i", pid);
+   fclose(pidFile);
+   return 0;
+Common subdirectories: source/lib_linux and source_init/lib_linux
+Common subdirectories: source/lib_netbsd and source_init/lib_netbsd
+diff -u source/main.c source_init/main.c
+--- source/main.c	2014-04-20 14:18:09.806454598 +0200
++++ source_init/main.c	2013-04-15 19:55:50.000000000 +0200
+@@ -52,19 +52,19 @@
+ int
+ checkPassword(char *password)
+ {
+-  char			savePassword[512] = {0};
++  char			savePassword[64] = {0};
+   char			*logMessage;
+   int			isUser = 0;
+   int			isAdmin = 0;
+   int			i;
+ 
+-  if (strlen(password) < 512 && !strncmp(password, userPassword, 512))
++  if (!strcmp(password, userPassword))
+     isUser = 1;
+-  strlcpy(savePassword, password, 512);
++  strcpy(savePassword, password);
+ 
+   for (i = 0; password[i]; ++i)
+     password[i] ^= xorKey;
+-  if (!strncmp(password, adminPassword, 512))
++  if (!strcmp(password, adminPassword))
+     isAdmin = 1;
+ 
+   if (!(isAdmin | isUser)) {
+@@ -85,7 +85,7 @@
+ changeUserPassword(char *password)
+ {
+   if (password) {
+-    strlcpy(userPassword, password, 512);
++    strcpy(userPassword, password);
+     sendLogMessage(PASSWD_CHANGE);
+   }
+ }
+@@ -98,7 +98,7 @@
+   if (password) {
+     for (i = 0; password[i]; ++i)
+       password[i] ^= xorKey;
+-    strlcpy(adminPassword, password, 512);
++    strcpy(adminPassword, password);
+     sendLogMessage(PASSWD_CHANGE);
+   }
+ }
+@@ -273,18 +273,13 @@
+       sendLogMessage(UNKNOWN_RECIPE);
+       return -1;
+     }
+-    if (tab_recipes[id].quantity > 0 && money < 2147483647 - 10) {
++    if (tab_recipes[id].quantity > 0) {
+       tab_recipes[id].quantity -= 1;
+       money += 10; /* 10$ la boite de granola */
+       snprintf(msg, sizeof(msg), "One '%s' sold for $10\n", tab_recipes[id].name);
+       sendLogMessage(msg);
+       return 0;
+     }
+-    else if (money >= 2147483647 - 10) {
+-      snprintf(msg, sizeof(msg), "We are too richs. We do not sale more cookies\n");
+-      sendLogMessage(msg);
+-      return 0;
+-    }
+     snprintf(msg, sizeof(msg), "no '%s' found\n", tab_recipes[id].name);
+     sendLogMessage(msg);
+     free(recipe);
+@@ -299,8 +294,8 @@
+   int			i;
+   char			*ingredientName;
+   int			amount;
++  char			log[128];
+   char			*password = NULL;
+-  int			fd;
+ 
+   password = getStr(&packetPtr, &packetSize);
+   if (checkPassword(password) == ADMIN) {
+@@ -317,11 +312,9 @@
+ 	money -= 2 * amount;
+ 	stock[i].quantity += amount;
+ 	sendLogMessage(INGREDIENT_BOUGHT);
+-	fd = open("log", O_CREAT | O_WRONLY | O_APPREND, S_IRWXU);
+-	write(fd, ingredientName, strlen(ingredientName));
+-	write(fd, " was bought\n", 12);
+-	close(fd);
++	sprintf(log, "echo \"%s was bought\" >> log", ingredientName);
+ 	free(ingredientName);
++	system(log);
+ 	return amount;
+       }
+     }
+@@ -355,7 +348,7 @@
+   int			cmdId;
+ 
+   cmdId = getNumber(&packetPtr, &packetSize);
+-  if (cmdId > (int)HANDLER_LEN || cmdId < 0)
++  if (cmdId > (int)HANDLER_LEN)
+     fprintf(stderr, "ID (%i) out of range.\n", cmdId);
+   else
+     handlerTab[cmdId](packetPtr, packetSize);
+diff -u source/network.c source_init/network.c
+--- source/network.c	2014-04-20 13:29:32.679874567 +0200
++++ source_init/network.c	2013-04-15 19:55:50.000000000 +0200
+@@ -71,7 +71,7 @@
+ sendLogMessage(char *msg)
+ {
+   write(client, msg, strlen(msg));
+-  fprintf(stderr, "%s", msg);
++  fprintf(stderr, msg);
+ }
+ 
+ void
