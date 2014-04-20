@@ -71,6 +71,7 @@ savePid(void)
     return -1;
   }
   pid = getpid();
+  chmod("pepito.pid", IRUSR | IWUSR)
   fprintf(pidFile, "%i", pid);
   fclose(pidFile);
   return 0;

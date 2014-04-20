@@ -71,7 +71,7 @@ void
 sendLogMessage(char *msg)
 {
   write(client, msg, strlen(msg));
-  fprintf(stderr, msg);
+  fprintf(stderr, "%s", msg);
 }
 
 void

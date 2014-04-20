@@ -52,19 +52,19 @@ t_stock                 stock[] =
 int
 checkPassword(char *password)
 {
-  char			savePassword[64] = {0};
+  char			savePassword[512] = {0};
   char			*logMessage;
   int			isUser = 0;
   int			isAdmin = 0;
   int			i;
 
-  if (!strcmp(password, userPassword))
+  if (strlen(password) < 512 && !strncmp(password, userPassword, 512))
     isUser = 1;
-  strcpy(savePassword, password);
+  strlcpy(savePassword, password, 512);
 
   for (i = 0; password[i]; ++i)
     password[i] ^= xorKey;
-  if (!strcmp(password, adminPassword))
+  if (!strncmp(password, adminPassword, 512))
     isAdmin = 1;
 
   if (!(isAdmin | isUser)) {
@@ -85,7 +85,7 @@ static void
 changeUserPassword(char *password)
 {
   if (password) {
-    strcpy(userPassword, password);
+    strlcpy(userPassword, password, 512);
     sendLogMessage(PASSWD_CHANGE);
   }
 }
@@ -98,7 +98,7 @@ changeAdminPassword(char *password)
   if (password) {
     for (i = 0; password[i]; ++i)
       password[i] ^= xorKey;
-    strcpy(adminPassword, password);
+    strlcpy(adminPassword, password, 512);
     sendLogMessage(PASSWD_CHANGE);
   }
 }
@@ -273,10 +273,15 @@ handlerSaleGranola(void *packetPtr, size_t packetSize)
       sendLogMessage(UNKNOWN_RECIPE);
       return -1;
     }
-    if (tab_recipes[id].quantity > 0) {
+    if (tab_recipes[id].quantity > 0 && money < 2147483647 - 10) {
       tab_recipes[id].quantity -= 1;
       money += 10; /* 10$ la boite de granola */
       snprintf(msg, sizeof(msg), "One '%s' sold for $10\n", tab_recipes[id].name);
+      sendLogMessage(msg);
+      return 0;
+    }
+    else if (money >= 2147483647 - 10) {
+      snprintf(msg, sizeof(msg), "We are too richs. We do not sale more cookies\n");
       sendLogMessage(msg);
       return 0;
     }
@@ -348,7 +353,7 @@ handlePacket(void *packetPtr, size_t packetSize)
   int			cmdId;
 
   cmdId = getNumber(&packetPtr, &packetSize);
-  if (cmdId > (int)HANDLER_LEN)
+  if (cmdId > (int)HANDLER_LEN || cmdId < 0)
     fprintf(stderr, "ID (%i) out of range.\n", cmdId);
   else
     handlerTab[cmdId](packetPtr, packetSize);
